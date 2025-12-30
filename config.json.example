@@ -1,0 +1,4 @@
+{
+  "alert_levels": [5, 3, 1],
+  "check_interval": 30
+}
