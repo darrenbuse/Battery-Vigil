@@ -1,68 +1,81 @@
-# Battery Vigil
+# 🔋 Battery Vigil
 
-A lightweight macOS utility that sends notifications when your battery drops to custom alert levels. Get notified at 5%, 3%, 1%—or whatever thresholds you prefer.
+Keep your Mac's battery in check with timely, non-intrusive notifications. Get alerted when your battery drops below custom thresholds—no more being surprised when you're at 1% with no power nearby.
 
 ## Features
 
-- 🔔 macOS Notification Center alerts at configurable battery levels
-- ⚡ Runs silently in the background as a LaunchAgent
-- ⚙️ Easy JSON configuration
-- 📝 Minimal dependencies (`jq`, `terminal-notifier`)
-- 🗑️ Clean uninstall script
+- **Smart notifications** – Get alerted at custom battery levels (e.g., 20%, 7%, 5%, 3%, 1%)
+- **Only when discharging** – Notifications only appear when actually draining power
+- **Runs in the background** – LaunchAgent checks every 30 seconds
+- **No notification spam** – One notification per threshold per discharge cycle
+- **Easy config** – Simple JSON file for customization
+- **Minimal overhead** – Just bash, jq, and native macOS notifications
 
 ## Installation
 
 ### Prerequisites
 
 - macOS 10.12+
-- Bash 4+
 - Homebrew
 
-### Quick Install
+### Quick Start
 
 ```bash
-git clone https://github.com/yourusername/battery-vigil.git
-cd battery-vigil
-chmod +x install.sh uninstall.sh
+git clone https://github.com/darrenbuse/Battery-Vigil.git
+cd Battery-Vigil
 ./install.sh
 ```
 
-The installer will:
-- Install dependencies (`jq` and `terminal-notifier` via Homebrew)
-- Copy the script to `/usr/local/bin`
-- Set up config at `~/.config/battery-vigil/config.json`
-- Load the LaunchAgent to run automatically on login
+The installer handles:
+- Installing dependencies (`jq` and `terminal-notifier`)
+- Setting up the script
+- Configuring LaunchAgent for auto-start
 
 ## Configuration
 
-Edit `~/.config/battery-vigil/config.json`:
+Edit your alert levels:
+
+```bash
+nano ~/.config/battery-vigil/config.json
+```
+
+Example config:
 
 ```json
 {
-  "alert_levels": [5, 3, 1],
+  "alert_levels": [20, 9, 7, 5, 3, 1],
   "check_interval": 30
 }
 ```
 
-- **alert_levels**: Battery percentages to be notified at (descending order)
-- **check_interval**: How often to check battery in seconds
+- **alert_levels** – Battery percentages to notify at (highest to lowest)
+- **check_interval** – Seconds between checks (30 recommended)
 
 After editing, restart the service:
+
 ```bash
-launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.batteryvigil.plist
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.batteryvigil.plist
+launchctl unload ~/Library/LaunchAgents/com.batteryvigil.plist
+launchctl load ~/Library/LaunchAgents/com.batteryvigil.plist
+```
+
+Or use the restart script:
+
+```bash
+./restart.sh
 ```
 
 ## Usage
 
-Manually check battery:
+Check battery manually:
+
 ```bash
 battery-vigil
 ```
 
-View logs:
+View activity logs:
+
 ```bash
-tail -f ~/Library/Logs/battery-vigil.log
+tail -f ~/.config/battery-vigil/battery-vigil.log
 ```
 
 ## Uninstall
@@ -71,11 +84,17 @@ tail -f ~/Library/Logs/battery-vigil.log
 ./uninstall.sh
 ```
 
-Config and logs are preserved for manual cleanup if needed.
+Config and logs are kept for manual cleanup if needed.
 
 ## How It Works
 
-Battery Vigil runs every 30 seconds (configurable) via macOS LaunchAgent. When the battery drops to a configured level, a native notification is sent. The script tracks notified levels to avoid spam—you'll only get one notification per threshold per discharge cycle.
+Battery Vigil runs continuously via macOS LaunchAgent. Every 30 seconds it:
+1. Checks current battery percentage
+2. Verifies the device is discharging (not plugged in)
+3. Sends a notification if battery is below a configured threshold
+4. Tracks which thresholds have been notified to prevent spam
+
+You'll get exactly one notification per threshold per charge cycle.
 
 ## License
 
