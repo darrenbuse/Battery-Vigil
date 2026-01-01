@@ -21,7 +21,7 @@ When debugging issues:
 ## Known Issues and Solutions
 
 ### Notification System
-- **Issue**: The original implementation used `terminal-notifier`, which requires notification permissions in System Preferences and doesn't always work from LaunchAgent context.
-- **Solution**: Use `osascript` for native macOS notifications instead. This is more reliable when running from LaunchAgent and doesn't require additional permissions.
-- **If reinstalling**: Always update both the source file (`battery-vigil.sh`) and reinstall to `/usr/local/bin/battery-vigil` using the install script. Changes to the source file alone won't take effect until reinstalled.
-- **Installation**: Run the `install.sh` script to properly copy the binary and set up LaunchAgent.
+- **Issue**: Notifications from LaunchAgent were unreliable and required complex permission setup.
+- **Solution**: Switched to cron-based scheduling for simplicity and reliability. Uses `terminal-notifier` which is more straightforward to test and debug.
+- **If reinstalling**: Run `install.sh` to set up cron jobs (no LaunchAgent complexity).
+- **Testing**: Use `battery-vigil test` to trigger notifications without state tracking - useful for testing without waiting for actual battery changes.

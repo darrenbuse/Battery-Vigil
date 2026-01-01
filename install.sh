@@ -7,8 +7,8 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_BIN="/usr/local/bin/battery-vigil"
 CONFIG_DIR="${HOME}/.config/battery-vigil"
-LAUNCHAGENT_DIR="${HOME}/Library/LaunchAgents"
-LAUNCHAGENT_FILE="com.batteryvigil.plist"
+CRON_JOB="* * * * * ${INSTALL_BIN} check
+* * * * * sleep 30 && ${INSTALL_BIN} check"
 
 echo "🔋 Battery Vigil Installer"
 echo "=========================="
@@ -45,25 +45,29 @@ fi
 
 # Install binary
 echo "📦 Installing binary to ${INSTALL_BIN}..."
-cp "${PROJECT_DIR}/battery-vigil.sh" "${INSTALL_BIN}"
+cp -f "${PROJECT_DIR}/battery-vigil.sh" "${INSTALL_BIN}"
 chmod +x "${INSTALL_BIN}"
 
-# Install LaunchAgent
-echo "🚀 Installing LaunchAgent..."
-cp "${PROJECT_DIR}/${LAUNCHAGENT_FILE}" "${LAUNCHAGENT_DIR}/${LAUNCHAGENT_FILE}"
-launchctl load "${LAUNCHAGENT_DIR}/${LAUNCHAGENT_FILE}"
+# Install cron job
+echo "⏰ Setting up cron job (every 30 seconds)..."
+# Remove existing battery-vigil cron jobs
+crontab -l 2>/dev/null | grep -v "${INSTALL_BIN}" | crontab - 2>/dev/null || true
+
+# Add new cron jobs
+(crontab -l 2>/dev/null || true; echo "$CRON_JOB") | crontab -
 
 echo ""
 echo "✅ Installation complete!"
 echo ""
 echo "📋 Next steps:"
 echo "   1. Edit config: nano ${CONFIG_DIR}/config.json"
-echo "   2. The service is now running and will start on login"
+echo "   2. The service is now running (via cron)"
 echo ""
 echo "📖 Usage:"
 echo "   - Check battery now: battery-vigil"
+echo "   - Test mode (always notify): battery-vigil test"
 echo "   - View logs: tail -f ${CONFIG_DIR}/battery-vigil.log"
-echo "   - Restart service: ./restart.sh"
+echo "   - View cron jobs: crontab -l"
 echo ""
 echo "🗑️  To uninstall:"
 echo "   ./uninstall.sh"

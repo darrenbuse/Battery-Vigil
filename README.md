@@ -6,10 +6,11 @@ Keep your Mac's battery in check with timely, non-intrusive notifications. Get a
 
 - **Smart notifications** – Get alerted at custom battery levels (e.g., 20%, 7%, 5%, 3%, 1%)
 - **Only when discharging** – Notifications only appear when actually draining power
-- **Runs in the background** – LaunchAgent checks every 30 seconds
+- **Runs in the background** – Cron checks every 30 seconds
 - **No notification spam** – One notification per threshold per discharge cycle
 - **Easy config** – Simple JSON file for customization
 - **Minimal overhead** – Just bash, jq, and native macOS notifications
+- **Simple debugging** – Every run is logged, use `battery-vigil test` to always show notifications
 
 ## Installation
 
@@ -29,7 +30,7 @@ cd Battery-Vigil
 The installer handles:
 - Installing dependencies (`jq` and `terminal-notifier`)
 - Setting up the script
-- Configuring LaunchAgent for auto-start
+- Configuring cron jobs to run every 30 seconds
 
 ## Configuration
 
@@ -51,18 +52,7 @@ Example config:
 - **alert_levels** – Battery percentages to notify at (highest to lowest)
 - **check_interval** – Seconds between checks (30 recommended)
 
-After editing, restart the service:
-
-```bash
-launchctl unload ~/Library/LaunchAgents/com.batteryvigil.plist
-launchctl load ~/Library/LaunchAgents/com.batteryvigil.plist
-```
-
-Or use the restart script:
-
-```bash
-./restart.sh
-```
+After editing, the changes take effect on the next cron run (within 30 seconds). No restart needed.
 
 ## Usage
 
@@ -72,10 +62,22 @@ Check battery manually:
 battery-vigil
 ```
 
+Test mode (always show notifications):
+
+```bash
+battery-vigil test
+```
+
 View activity logs:
 
 ```bash
 tail -f ~/.config/battery-vigil/battery-vigil.log
+```
+
+View scheduled cron jobs:
+
+```bash
+crontab -l
 ```
 
 ## Uninstall
@@ -88,13 +90,14 @@ Config and logs are kept for manual cleanup if needed.
 
 ## How It Works
 
-Battery Vigil runs continuously via macOS LaunchAgent. Every 30 seconds it:
+Battery Vigil runs continuously via cron jobs (every 30 seconds). Each run:
 1. Checks current battery percentage
 2. Verifies the device is discharging (not plugged in)
 3. Sends a notification if battery is below a configured threshold
 4. Tracks which thresholds have been notified to prevent spam
+5. Logs every run to `~/.config/battery-vigil/battery-vigil.log`
 
-You'll get exactly one notification per threshold per charge cycle.
+You'll get exactly one notification per threshold per charge cycle. Use `battery-vigil test` to trigger notifications instantly for testing.
 
 ## License
 
